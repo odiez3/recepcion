@@ -139,7 +139,13 @@ class UsersForm extends Component {
                                     }
                                     <div className="center-align">
                                         <button className="waves-effect waves-light btn mr-1 green darken-3" type="submit">Guardar</button>
-                                        <button className="waves-effect waves-light btn red darken-3" type="button">Cancelar</button>
+                                        <button className="waves-effect waves-light btn red darken-3" type="button"
+                                        onClick={
+                                            ()=>{
+                                                this.props.history.push("/dashboard/users");
+                                            }
+                                        }
+                                        >Cancelar</button>
                                     </div>
                                     <input type="file" id="img" onChange={this.changeImg} hidden />
                                 </form>
