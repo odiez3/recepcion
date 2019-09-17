@@ -57,7 +57,7 @@ class Navigation extends Component {
 
                     {
                         menu.map((value, index) => {
-                            return <li className="linkSidenav"><Link key={index} to={value.path}>{value.text}</Link></li>
+                            return <li className="linkSidenav" key={index}><Link key={index} to={value.path}>{value.text}</Link></li>
                         })
                     }
                     <li><div className="divider"></div></li>

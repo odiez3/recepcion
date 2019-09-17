@@ -1,3 +1,4 @@
+import PROFILE_DEFAULT from './Person.png';
 export const FIREBASE_PROPS = {
     apiKey: "AIzaSyBUJGTVRMRfir7hI85QRBFgSz0zZclm34k",
     authDomain: "freelancer-4107d.firebaseapp.com",
@@ -21,6 +22,8 @@ export const PERFILES = {
   3:"Recepcionista",
   4:"Usuario"
 };
+
+export const DEFAULT_PROFILE = PROFILE_DEFAULT;
 
 export const MENU_PERFIL = {
   1:[
