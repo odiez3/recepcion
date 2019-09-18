@@ -3,8 +3,18 @@ import { PERFILES, DEFAULT_PROFILE } from '../../properties/properties';
 import M from 'materialize-css';
 import './users.css';
 import * as shortID from 'shortid';
-import { checkCedula,changeNameFile } from './users.code';
+import { checkCedula, changeNameFile, uploadFile, deleteFile, addUser, updateUser, getUser } from './users.code';
+import Webcam from "react-webcam";
+import { closeModal, openModal } from '../dashboard/dashboard.code';
 import $ from 'jquery';
+
+const videoConstraints = {
+    width: 400,
+    height: 400,
+    facingMode: "user"
+}
+
+const webcamref = React.createRef();
 
 class UsersForm extends Component {
 
@@ -16,32 +26,22 @@ class UsersForm extends Component {
         correo: "",
         telefono: "",
         cedula: "",
-        password:"",
-        preview:false,
-        fileToUpload:false
+        password: "",
+        preview: false,
+        fileToUpload: false,
+        id: false
     }
 
     onChangeValues = (event) => {
         let { id, value } = event.target;
-        debugger;
         this.setState({ [id]: value });
     }
 
     async componentWillMount() {
-        let cedula = shortID.generate().replace("-", "0").replace("_", "1").toUpperCase();
-        let existsCedula = await checkCedula(cedula);
-
-        while (existsCedula.error) {
-            cedula = shortID.generate().replace("-", "0").replace("_", "1").toUpperCase();
-            existsCedula = await checkCedula(cedula);
-        }
-
-        this.setState({ cedula }, () => {
-            M.updateTextFields();
-        });
+       
     }
 
-    changeImg=(event)=> {
+    changeImg = (event) => {
 
         let { files } = event.target;
         if (files.length > 0) {
@@ -50,7 +50,7 @@ class UsersForm extends Component {
                 var reader = new FileReader();
                 reader.onloadend = () => {
                     let fil = file;
-                    fil.newName = changeNameFile(file, false);
+                    fil.newName = changeNameFile(file, this.state.cedula);
                     this.setState({ preview: reader.result, fileToUpload: file, success: null, error: null });
                 }
                 reader.readAsDataURL(file);
@@ -58,14 +58,155 @@ class UsersForm extends Component {
         }
     }
 
-    componentDidMount() {
-        M.FormSelect.init(document.querySelectorAll('select'), {});
-        console.log();
+   async componentDidMount() {
+        openModal();
+        let cedula = shortID.generate().replace("-", "0").replace("_", "1").toUpperCase();
+        let existsCedula = false;
+        //Revisa que no tenga ceula
+        if (this.props.match && this.props.match.params && this.props.match.params.cedula) {
+            cedula = this.props.match.params.cedula;
+            let user = await getUser(cedula);
+
+            if(user && user.user){
+                this.setState(user.user);
+            }
+
+        } else {
+            existsCedula = await checkCedula(cedula);
+            while (existsCedula.error) {
+                cedula = shortID.generate().replace("-", "0").replace("_", "1").toUpperCase();
+                existsCedula = await checkCedula(cedula);
+            }
+        }
+
+
+        this.setState({ cedula }, () => {
+            closeModal();
+            M.updateTextFields();
+            M.FormSelect.init(document.querySelectorAll('select'), {});
+        });
+       
     }
 
     submitForm = (event) => {
         event.preventDefault();
         console.log(this.state);
+
+        openModal();
+        let { perfil, nombre, apellidos, correo, telefono, cedula, password, fileToUpload, id } = this.state
+        let descPerfil = "";
+        let valido = true;
+
+        console.log(descPerfil);
+
+        if (nombre.trim() === "" && valido) {
+            valido = false;
+            M.toast({ html: "Ingrese el nombre del usuario.", classes: 'red darken-1' });
+        }
+
+        if (apellidos.trim() === "" && valido) {
+            valido = false;
+            M.toast({ html: "Ingrese los apellidos del usuario.", classes: 'red darken-1' });
+        }
+
+        if ((perfil.trim() === "" || !PERFILES[perfil]) && valido) {
+            valido = false;
+            M.toast({ html: "Elija un Perfil para este usuario.", classes: 'red darken-1' });
+        } else {
+            if (valido) {
+                descPerfil = PERFILES[perfil].toLowerCase();
+            }
+        }
+
+
+        if (correo.trim() === "" && valido) {
+            valido = false;
+            M.toast({ html: "Ingrese un correo válido.", classes: 'red darken-1' });
+        }
+
+        if (telefono.trim() === "" && valido) {
+            valido = false;
+            M.toast({ html: "Ingrese un Teléfono válido.", classes: 'red darken-1' });
+        }
+
+        if (perfil.trim() !== "4" && password.trim() === "" && valido) {
+            M.toast({ html: "Ingrese una contraseña válida.", classes: 'red darken-1' });
+        }
+
+
+        if (fileToUpload && valido) {
+            uploadFile(this.state.preview, `/${descPerfil}/images/${cedula}/${fileToUpload.newName}`).then((result) => {
+                let urlProfile = result.downloadURL;
+                let data = {
+                    perfil,
+                    nombre: nombre.trim(),
+                    apellidos: apellidos.trim(),
+                    correo, telefono: telefono.trim(),
+                    cedula: cedula.trim(),
+                    password,
+                    urlProfile,
+                    nameFile: fileToUpload.newName,
+                    nombreToSearch: `${nombre.trim().toUpperCase()} ${apellidos.trim().toUpperCase()}`
+                }
+                if (id) {
+                    updateUser(data, id);
+                } else {
+                    addUser(data).then((user) => {
+                        if (user && user.id) {
+                            this.setState({ id: user.id });
+                        }
+                    });
+                }
+
+            }).catch((error) => {
+                deleteFile(`/${descPerfil}/images/${cedula}/${fileToUpload.newName}`);
+                console.log(error);
+                M.toast({ html: "Ocurrio un error al agregar el usuario, intenta de nuevo.", classes: 'red darken-1' });
+            })
+        } else {
+            if (valido && !id) {
+                valido = false;
+                M.toast({ html: "Elija una Imagen de Perfil para este usuario.", classes: 'red darken-1' });
+            } else if (valido && id) {
+                let data = {
+                    perfil,
+                    nombre: nombre.trim(),
+                    apellidos: apellidos.trim(),
+                    correo, telefono: telefono.trim(),
+                    cedula: cedula.trim(),
+                    password,
+                    nombreToSeach: `${nombre.trim().toUpperCase()} ${apellidos.trim().toUpperCase()}`
+                }
+                updateUser(data, id);
+            }
+        }
+
+
+        if (!valido) {
+            closeModal();
+        }
+
+
+    }
+
+    capture = () => {
+        let preview = webcamref.current.getScreenshot();
+        this.captureToFile(PeriodicWave, `${this.state.cedula}.jpeg`, "image/jpeg").then((rs) => {
+            let fileToUpload = rs;
+            fileToUpload.newName = `${this.state.cedula}.jpeg`;
+            this.setState({ preview, fileToUpload });
+        });
+    }
+
+    recapture = () => {
+        this.setState({ preview: false });
+    }
+
+    captureToFile(data, filename, mimeType) {
+        return (fetch(data)
+            .then(function (res) { return res.arrayBuffer(); })
+            .then(function (buf) { return new File([buf], filename, { type: mimeType }); })
+        );
     }
 
 
@@ -80,19 +221,30 @@ class UsersForm extends Component {
                                 <form onSubmit={this.submitForm} className="formUser">
                                     <div className="center-align">
                                         {
-                                            this.state.preview ? 
-                                            <img src={this.state.preview} alt="" className="circle responsive-img z-depth-5" />
-                                            : 
-                                            <img src={DEFAULT_PROFILE} alt="" className="circle responsive-img z-depth-5" />
+                                            this.state.preview ?
+                                                <img src={this.state.preview} alt="" className="responsive-img z-depth-5" />
+                                                :
+                                                <Webcam
+                                                    className="responsive-video z-depth-5 capture"
+                                                    audio={false}
+                                                    height={225}
+                                                    screenshotFormat="image/jpeg"
+                                                    width={300}
+                                                    ref={webcamref}
+                                                />
                                         }
-                                      
                                     </div>
                                     <div className="center-align">
-                                        <button className="waves-effect waves-light btn" type="button"
-                                        onClick={()=>{
-                                            $("#img").click();
-                                        }}
-                                        ><i className="material-icons right">camera_alt</i>Cambiar</button>
+                                        <button className="waves-effect waves-light btn mr-1 light-blue darken-1" type="button"
+                                            onClick={() => {
+                                                $("#img").click();
+                                            }}
+                                        ><i className="material-icons">attach_file</i></button>
+                                        <button className="waves-effect waves-light btn light-blue darken-1" type="button"
+                                            onClick={() => {
+                                                this.state.preview ? this.recapture() : this.capture()
+                                            }}
+                                        ><i className="material-icons">camera_alt</i></button>
                                     </div>
                                     <div className="input-field">
                                         <input id="nombre" type="text" onChange={this.onChangeValues} value={this.state.nombre} />
@@ -126,11 +278,11 @@ class UsersForm extends Component {
                                         <label htmlFor="telefono">Teléfono</label>
                                     </div>
                                     <div className="input-field">
-                                        <input id="cedula" type="text" value={this.state.cedula} readOnly maxLength="4"/>
+                                        <input id="cedula" type="text" value={this.state.cedula} readOnly maxLength="4" />
                                         <label htmlFor="cedula">Cédula</label>
                                     </div>
                                     {
-                                        this.state.perfil.trim() !== "4" && this.state.perfil.trim() !== ""?
+                                        this.state.perfil.trim() === "1" && this.state.perfil.trim() !== "" && !this.state.id ?
                                             <div className="input-field">
                                                 <input id="password" type="password" value={this.state.password} onChange={this.onChangeValues} maxLength="50" />
                                                 <label htmlFor="password">Contraseña</label>
@@ -140,11 +292,11 @@ class UsersForm extends Component {
                                     <div className="center-align">
                                         <button className="waves-effect waves-light btn mr-1 green darken-3" type="submit">Guardar</button>
                                         <button className="waves-effect waves-light btn red darken-3" type="button"
-                                        onClick={
-                                            ()=>{
-                                                this.props.history.push("/dashboard/users");
+                                            onClick={
+                                                () => {
+                                                    this.props.history.push("/dashboard/users");
+                                                }
                                             }
-                                        }
                                         >Cancelar</button>
                                     </div>
                                     <input type="file" id="img" onChange={this.changeImg} hidden />

@@ -5,3 +5,7 @@
 .formUser .mr-1{
     margin-right: 1rem;
 }
+
+.formUser .capture{
+    border-radius: 10px;
+}

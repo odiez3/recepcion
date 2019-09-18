@@ -8,7 +8,7 @@ class RouterDashboard extends Component {
     render() {
         return (
                 <Switch> 
-                    <Route path="/dashboard/userForm/:id?" component={UsersForm} />
+                    <Route path="/dashboard/userForm/:cedula?" component={UsersForm} />
                     <Route path="/dashboard/users" component={Usuarios} />
                 </Switch>
         )

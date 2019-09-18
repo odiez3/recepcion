@@ -31,7 +31,6 @@ class Login extends Component {
         });
     }
 
-
     changeValues = (event) => {
         let { id, value } = event.target;
         this.setState({ [id]: value });

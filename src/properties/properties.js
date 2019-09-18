@@ -4,7 +4,7 @@ export const FIREBASE_PROPS = {
     authDomain: "freelancer-4107d.firebaseapp.com",
     databaseURL: "https://freelancer-4107d.firebaseio.com",
     projectId: "freelancer-4107d",
-    storageBucket: "",
+    storageBucket: "freelancer-4107d.appspot.com",
     messagingSenderId: "6003852237",
     appId: "1:6003852237:web:3a4647ddc1587fe5f0fa84"
   };

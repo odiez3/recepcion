@@ -8,10 +8,17 @@ import $ from'jquery';
 
 class Navigation extends Component {
 
+    getInstance(){
+        var elem = document.querySelector('.sidenav');
+        let instance = M.Sidenav.getInstance(elem);
+
+        return instance;
+    }
+
     componentDidMount = () => {
         var elem = document.querySelector('.sidenav');
         M.Sidenav.init(elem, {});
-        var instance = M.Sidenav.getInstance(elem);
+        let instance = this.getInstance();
 
         $(document).ready(()=>{
             $('.linkSidenav').on('click',()=>{
@@ -23,6 +30,8 @@ class Navigation extends Component {
     signOut = (event) => {
         event.preventDefault();
         firebase.auth().signOut().then(() => {
+            let instance = this.getInstance();
+            instance.destroy();
             this.props.history.push("/"); this.props.history.push("/");
         });
     }
