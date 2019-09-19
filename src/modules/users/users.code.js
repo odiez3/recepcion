@@ -73,13 +73,16 @@ export function updateUser(data,id){
 export function checkCedula(cedula){
     return new Promise((resolve,reject)=>{
         firebase.firestore().collection('/users').where('cedula',"==",cedula).get().then((rs)=>{
+            debugger;
             if(rs.docs.length){
                 reject({error:true});
             }else{
                 resolve({error:false});
             }
         }).catch((error)=>{
-            M.toast({html:'No se logro generar la cedula automaticamente.',classes:'red darken-1'})
+         
+            M.toast({html:'No se logro generar la cedula automaticamente.',classes:'red darken-1'});
+            resolve(false);
         });
     });
     
@@ -154,7 +157,6 @@ export function searchByName(name){
         firebase.firestore().collection('/users').get().then((rs)=>{
             let docs = rs.docs;
             let users = [];
-
             if(docs.length){
                 for(var usr of docs){
                     let data = usr.data();
@@ -164,13 +166,40 @@ export function searchByName(name){
                         users.push(data);
                      }
                 }
-                resolve(users);
+                if(users.length){
+                    resolve(users);
+                }else{
+                    M.toast({html:'No existen coincidencias.',classes:'red darken-1'});
+                    resolve(false);
+                }
+              
             }else{
-                resolve(false);
                 M.toast({html:'No se lograron recuperar usuarios.',classes:'red darken-1'});
+                resolve(false);
             }
         }).catch((error)=>{
             M.toast({html:'Ocurrio un error al recuperar usuarios. <br>Intente de nuevo.',classes:'red darken-1'});
         })
     });
+}
+
+export function creaSolicitud(cedulaAVisitar, cedulaVisitante){
+
+    let date = new Date();
+    let data = {
+        visitante : cedulaVisitante,
+        empleado: cedulaAVisitar,
+        aceptada:false,
+        fechaCreacion: date.getTime()
+    }
+
+    return new Promise((resolve)=>{
+        firebase.firestore().collection('/solicitudes').add(data).then((rs)=>{
+            resolve(true);
+        }).catch((error)=>{
+            M.toast({html:'No se logro enviar la solicitud intenta de nuevo.',classes:'red darken-1'});
+            resolve(false);
+        })
+    });
+  
 }

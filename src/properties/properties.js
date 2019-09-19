@@ -35,5 +35,11 @@ export const MENU_PERFIL = {
       path:"/dashboard/reporteria",
       text:"Reporteria"
     }
+  ],
+  4:[
+    {
+      path:"/dashboard/buscarEmpleado",
+      text:"Empleado"
+    }
   ]
 }

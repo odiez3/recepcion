@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import Navigation from './navigation.cmpt';
 import firebase from 'firebase';
+import { getUserCorreo } from './dashboard.code';
+import {getUser} from '../users/users.code';
 import { USUARIO } from '../../dummys/user';
 import './dashboard.css';
 import M from 'materialize-css';
@@ -10,17 +12,41 @@ import RouterDashboard from '../../router/router-dashboard';
 class Dashboard extends Component {
 
     state = {
-        login: false
+        login: false,
+        user: false
     }
 
     componentWillMount() {
-        firebase.auth().onAuthStateChanged((user) => {
+        firebase.auth().onAuthStateChanged(async (user) => {
             if (!user) {
                 this.props.history.push("/");
             } else {
-                this.setState({ login: true }, () => {
-                    M.Modal.init(document.querySelectorAll('.modal'), { dismissible: false });
-                });
+              
+                if (user.isAnonymous) {
+                    console.log(this.props);
+                    if(this.props.location && this.props.location.state && this.props.location.state.cedula && this.props.location.state.cedula.trim() !== ""){
+                        let usr = await getUser(this.props.location.state.cedula);
+                        if(usr){
+                            this.setState({ login: true, user: usr.user }, () => {
+                                M.Modal.init(document.querySelectorAll('.modal'), { dismissible: false });
+                                this.props.history.push('/dashboard/buscarEmpleado',{cedula:usr.user.cedula});
+                            });
+                        }else{  
+                            firebase.auth().signOut();
+                        }
+                    }else{
+                        firebase.auth().signOut();
+                    }
+                } else {
+                    let usr = await getUserCorreo(user.email);
+                    if (usr) {
+                        console.log(usr.user);
+                        this.setState({ login: true, user: usr.user }, () => {
+                            M.Modal.init(document.querySelectorAll('.modal'), { dismissible: false });
+                        });
+                    }
+                }
+
             }
         });
     }
@@ -32,7 +58,7 @@ class Dashboard extends Component {
         }
         return (
             <div className="dashContent">
-                <Navigation history={this.props.history} usuario={USUARIO} />
+                <Navigation history={this.props.history} usuario={this.state.user} />
                 <RouterDashboard />
                 <div id="modal1" className="modal bottom-sheet">
                     <div className="modal-content center-align">

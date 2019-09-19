@@ -9,3 +9,24 @@
 .formUser .capture{
     border-radius: 10px;
 }
+
+.formUser .nombreEmpleado{
+    font-weight: bold;
+}
+
+.mt-1{
+    margin-top: 1rem;
+}
+
+.back{
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .viewEmpleado .card.horizontal{
+        display: block;
+    }
+    .viewEmpleado .card.horizontal .card-image {
+        max-width: 100% !important;
+    }
+  }

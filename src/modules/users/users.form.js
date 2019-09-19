@@ -26,10 +26,11 @@ class UsersForm extends Component {
         correo: "",
         telefono: "",
         cedula: "",
-        password: "",
         preview: false,
         fileToUpload: false,
-        id: false
+        id: false,
+        area:"",
+        cargo:"",
     }
 
     onChangeValues = (event) => {
@@ -93,7 +94,7 @@ class UsersForm extends Component {
         console.log(this.state);
 
         openModal();
-        let { perfil, nombre, apellidos, correo, telefono, cedula, password, fileToUpload, id } = this.state
+        let { perfil, nombre, apellidos, correo, telefono, cedula, fileToUpload, id,cargo,area } = this.state
         let descPerfil = "";
         let valido = true;
 
@@ -129,10 +130,6 @@ class UsersForm extends Component {
             M.toast({ html: "Ingrese un Teléfono válido.", classes: 'red darken-1' });
         }
 
-        if (perfil.trim() !== "4" && password.trim() === "" && valido) {
-            M.toast({ html: "Ingrese una contraseña válida.", classes: 'red darken-1' });
-        }
-
 
         if (fileToUpload && valido) {
             uploadFile(this.state.preview, `/${descPerfil}/images/${cedula}/${fileToUpload.newName}`).then((result) => {
@@ -143,10 +140,11 @@ class UsersForm extends Component {
                     apellidos: apellidos.trim(),
                     correo, telefono: telefono.trim(),
                     cedula: cedula.trim(),
-                    password,
                     urlProfile,
                     nameFile: fileToUpload.newName,
-                    nombreToSearch: `${nombre.trim().toUpperCase()} ${apellidos.trim().toUpperCase()}`
+                    nombreToSearch: `${nombre.trim().toUpperCase()} ${apellidos.trim().toUpperCase()}`,
+                    area,
+                    cargo
                 }
                 if (id) {
                     updateUser(data, id);
@@ -174,7 +172,6 @@ class UsersForm extends Component {
                     apellidos: apellidos.trim(),
                     correo, telefono: telefono.trim(),
                     cedula: cedula.trim(),
-                    password,
                     nombreToSeach: `${nombre.trim().toUpperCase()} ${apellidos.trim().toUpperCase()}`
                 }
                 updateUser(data, id);
@@ -211,6 +208,9 @@ class UsersForm extends Component {
 
 
     render() {
+        if(this.state.cedula.trim() === ""){
+            return <div></div>
+        }
         return (
             <div className="container">
                 <div className="row">
@@ -278,17 +278,17 @@ class UsersForm extends Component {
                                         <label htmlFor="telefono">Teléfono</label>
                                     </div>
                                     <div className="input-field">
+                                        <input id="area" type="text" value={this.state.area} />
+                                        <label htmlFor="area">Área</label>
+                                    </div>
+                                    <div className="input-field">
+                                        <input id="cargo" type="text" value={this.state.cargo} />
+                                        <label htmlFor="cargo">Cargo</label>
+                                    </div>
+                                    <div className="input-field">
                                         <input id="cedula" type="text" value={this.state.cedula} readOnly maxLength="4" />
                                         <label htmlFor="cedula">Cédula</label>
                                     </div>
-                                    {
-                                        this.state.perfil.trim() === "1" && this.state.perfil.trim() !== "" && !this.state.id ?
-                                            <div className="input-field">
-                                                <input id="password" type="password" value={this.state.password} onChange={this.onChangeValues} maxLength="50" />
-                                                <label htmlFor="password">Contraseña</label>
-                                            </div>
-                                            : null
-                                    }
                                     <div className="center-align">
                                         <button className="waves-effect waves-light btn mr-1 green darken-3" type="submit">Guardar</button>
                                         <button className="waves-effect waves-light btn red darken-3" type="button"
