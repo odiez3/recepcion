@@ -37,7 +37,8 @@ class ConfirmaDatos extends Component {
                         <div className="card">
                             <div className="card-content black-text">
                                 <span className="card-title">Confirma tus datos</span>
-                                <div className="left-align mt-1">
+                                <div className="divider mt-1"></div>
+                                <div className="left-align ">
                                     <h5>Imagen de Perfil</h5>
                                 </div>
                                 <div className="divider"></div>
