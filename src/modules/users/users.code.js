@@ -73,7 +73,7 @@ export function updateUser(data,id){
 export function checkCedula(cedula){
     return new Promise((resolve,reject)=>{
         firebase.firestore().collection('/users').where('cedula',"==",cedula).get().then((rs)=>{
-            debugger;
+        
             if(rs.docs.length){
                 reject({error:true});
             }else{
